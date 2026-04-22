@@ -1,93 +1,93 @@
-<!-- ✨ Modern, Clean & Developer-Friendly Maven POM ✨ -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/maven-v4_0_0.xsd">
+<!-- ===================== index.jsp ===================== -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Upload App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
-    <!-- 🔷 PROJECT METADATA -->
-    <modelVersion>4.0.0</modelVersion>
+<h1>📸 Image Upload & Gallery</h1>
 
-    <groupId>in.javahome</groupId>
-    <artifactId>myweb</artifactId>
-    <version>8.8.0</version>
-    <packaging>war</packaging>
+<form action="upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="image" required />
+    <button type="submit">Upload</button>
+</form>
 
-    <name>🚀 Java Home - My Web Application</name>
-    <url>http://maven.apache.org</url>
+<hr/>
 
+<h2>Gallery</h2>
+<div class="gallery">
+    <%
+        java.io.File folder = new java.io.File(application.getRealPath("/uploads"));
+        if (folder.exists()) {
+            for (String file : folder.list()) {
+    %>
+        <img src="uploads/<%=file%>" />
+    <%
+            }
+        }
+    %>
+</div>
 
-    <!-- ⚙️ GLOBAL PROPERTIES -->
-    <properties>
-        <docker.image.prefix>kammana</docker.image.prefix>
-        <sonar.host.url>http://18.181.164.81:9000/</sonar.host.url>
-    </properties>
-
-
-    <!-- 📦 DEPENDENCIES -->
-    <dependencies>
-
-        <!-- 🧪 Unit Testing -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
+</body>
+</html>
 
 
-    <!-- 🌐 REMOTE REPOSITORIES -->
-    <repositories>
-        <repository>
-            <id>azure-devops-feed</id>
-            <url>https://pkgs.dev.azure.com/shaikmustafa8991/myproject/_packaging/mydevops-feed/maven/v1</url>
+<!-- ===================== UploadServlet.java ===================== -->
+<%@ page import="java.io.*,javax.servlet.*,javax.servlet.http.*,javax.servlet.annotation.*" %>
 
-            <releases>
-                <enabled>true</enabled>
-            </releases>
+<%
+@MultipartConfig
+public class UploadServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
+        Part filePart = request.getPart("image");
+        String fileName = filePart.getSubmittedFileName();
 
+        String uploadPath = getServletContext().getRealPath("") + File.separator + "uploads";
+        File uploadDir = new File(uploadPath);
+        if (!uploadDir.exists()) uploadDir.mkdir();
 
-    <!-- 🚚 ARTIFACT DISTRIBUTION -->
-    <distributionManagement>
+        filePart.write(uploadPath + File.separator + fileName);
 
-        <!-- 📤 Snapshot Deployment -->
-        <snapshotRepository>
-            <id>nexusRepo</id>
-            <url>http://34.208.218.12:8081/repository/sample-snapshots/</url>
-        </snapshotRepository>
-
-        <!-- 📦 Release Deployment -->
-        <repository>
-            <id>azure-devops-feed</id>
-            <url>https://pkgs.dev.azure.com/shaikmustafa8991/myproject/_packaging/mydevops-feed/maven/v1</url>
-
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-
-    </distributionManagement>
+        response.sendRedirect("index.jsp");
+    }
+}
+%>
 
 
-    <!-- 🔌 PLUGIN REPOSITORIES -->
-    <pluginRepositories>
-        <pluginRepository>
-            <id>central</id>
-            <name>Maven Central Repository</name>
-            <url>https://repo1.maven.org/maven2</url>
-        </pluginRepository>
-    </pluginRepositories>
+<!-- ===================== web.xml ===================== -->
+<web-app>
+    <servlet>
+        <servlet-name>UploadServlet</servlet-name>
+        <servlet-class>UploadServlet</servlet-class>
+    </servlet>
 
-</project>
+    <servlet-mapping>
+        <servlet-name>UploadServlet</servlet-name>
+        <url-pattern>/upload</url-pattern>
+    </servlet-mapping>
+</web-app>
 
+
+<!-- ===================== styles.css ===================== -->
+body {
+    font-family: Arial;
+    text-align: center;
+    background: #f4f4f4;
+}
+
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.gallery img {
+    width: 200px;
+    margin: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #aaa;
+}
